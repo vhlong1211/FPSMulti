@@ -1,8 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
-public class PlayerController : MonoBehaviour
+using Photon.Pun;
+public class PlayerController : MonoBehaviourPunCallbacks
 {
     public Transform viewPoint;
     public float mouseSensitivity = 1f;
@@ -35,22 +35,24 @@ public class PlayerController : MonoBehaviour
 
     public float muzzleDisplayTime;
     private float muzzleCounter;
+    private bool isSetup = false;
 
-    // Start is called before the first frame update
-    void Start()
+    public GameObject playerHitImpact;
+    public void Setup()
     {
+        isSetup = true;
         Cursor.lockState = CursorLockMode.Locked;
         cam = Camera.main;
         UIManager.ins.weaponTempSlide.maxValue = maxHeat;
 
-        Transform pos = SpawnManager.ins.GetRandomPoint();
-        transform.position = pos.position;
-        transform.rotation = pos.rotation;
+        SwitchGun();
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (!photonView.IsMine) return;
+        if (!isSetup) return;
         //Movement
         mouseInput = new Vector2(Input.GetAxisRaw("Mouse X") * mouseSensitivity, Input.GetAxisRaw("Mouse Y") * mouseSensitivity);
 
@@ -180,8 +182,18 @@ public class PlayerController : MonoBehaviour
         //ray.origin = cam.transform.position;
         if (Physics.Raycast(ray, out RaycastHit hit))
         {
-            GameObject eff = Instantiate(bulletImpact, hit.point + (hit.normal * 0.002f),Quaternion.LookRotation(hit.normal,Vector3.up));
-            Destroy(eff, 5f);
+            if (hit.collider.gameObject.tag == "Player")
+            {
+                PhotonNetwork.Instantiate(playerHitImpact.name, hit.point,Quaternion.identity);
+
+                hit.collider.gameObject.GetPhotonView().RPC("DealDamage", RpcTarget.All);
+            }
+            else
+            {
+                GameObject eff = Instantiate(bulletImpact, hit.point + (hit.normal * 0.002f), Quaternion.LookRotation(hit.normal, Vector3.up));
+                Destroy(eff, 5f);
+            }
+
         }
         shotCounter = allGuns[selectedGun].timeBetweenShots;
 
@@ -208,9 +220,24 @@ public class PlayerController : MonoBehaviour
         allGuns[selectedGun].gameObject.SetActive(true);
     }
 
+    [PunRPC]
+    public void DealDamage()
+    {
+        Debug.Log("I've been hit");
+    }
+    public void TakeDamage()
+    {
+
+    }
+
     private void LateUpdate()
     {
-        cam.transform.position = viewPoint.position;
-        cam.transform.rotation = viewPoint.rotation;
+        if (!isSetup) return;
+
+        if (photonView.IsMine)
+        {
+            cam.transform.position = viewPoint.position;
+            cam.transform.rotation = viewPoint.rotation;
+        }
     }
 }
