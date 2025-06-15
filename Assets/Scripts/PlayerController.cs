@@ -38,14 +38,19 @@ public class PlayerController : MonoBehaviourPunCallbacks
     private bool isSetup = false;
 
     public GameObject playerHitImpact;
+
+    public int maxHealth = 100;
+    private int currentHealth;
     public void Setup()
     {
         isSetup = true;
         Cursor.lockState = CursorLockMode.Locked;
         cam = Camera.main;
         UIManager.ins.weaponTempSlide.maxValue = maxHeat;
+        UIManager.ins.playerHealthSlide.maxValue = maxHealth;
 
         SwitchGun();
+        currentHealth = maxHealth;
     }
 
     // Update is called once per frame
@@ -186,7 +191,7 @@ public class PlayerController : MonoBehaviourPunCallbacks
             {
                 PhotonNetwork.Instantiate(playerHitImpact.name, hit.point,Quaternion.identity);
 
-                hit.collider.gameObject.GetPhotonView().RPC("DealDamage", RpcTarget.All);
+                hit.collider.gameObject.GetPhotonView().RPC("DealDamage", RpcTarget.All, photonView.Owner.NickName, allGuns[selectedGun].shotDamage);
             }
             else
             {
@@ -221,13 +226,22 @@ public class PlayerController : MonoBehaviourPunCallbacks
     }
 
     [PunRPC]
-    public void DealDamage()
+    public void DealDamage(string damager,int damage)
     {
-        Debug.Log("I've been hit");
+        TakeDamage(damager,damage);
     }
-    public void TakeDamage()
+    public void TakeDamage(string damager, int damage)
     {
-
+        if (photonView.IsMine)
+        {
+            currentHealth -= damage;
+            if (currentHealth <= 0)
+            {
+                currentHealth = 0;
+                PlayerSpawner.ins.Die(damager);
+            }
+            UIManager.ins.playerHealthSlide.value = currentHealth;
+        }
     }
 
     private void LateUpdate()
