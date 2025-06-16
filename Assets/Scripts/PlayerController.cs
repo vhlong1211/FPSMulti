@@ -16,6 +16,7 @@ public class PlayerController : MonoBehaviourPunCallbacks
 
     public CharacterController cc;
     private Camera cam;
+    public Animator animator;
 
     public float jumpForce = 12, gravityMod = 2.5f;
 
@@ -38,6 +39,9 @@ public class PlayerController : MonoBehaviourPunCallbacks
     private bool isSetup = false;
 
     public GameObject playerHitImpact;
+    public GameObject model;
+    public Transform gunHolder;
+    public Transform gunAdjust;
 
     public int maxHealth = 100;
     private int currentHealth;
@@ -46,11 +50,22 @@ public class PlayerController : MonoBehaviourPunCallbacks
         isSetup = true;
         Cursor.lockState = CursorLockMode.Locked;
         cam = Camera.main;
-        UIManager.ins.weaponTempSlide.maxValue = maxHeat;
-        UIManager.ins.playerHealthSlide.maxValue = maxHealth;
 
-        SwitchGun();
+        photonView.RPC("SetGun", RpcTarget.All, selectedGun);
         currentHealth = maxHealth;
+
+        if (photonView.IsMine)
+        {
+            model.SetActive(false);
+            UIManager.ins.weaponTempSlide.maxValue = maxHeat;
+            UIManager.ins.playerHealthSlide.maxValue = maxHealth;
+        }
+        else
+        {
+            gunHolder.SetParent(gunAdjust);
+            gunHolder.localEulerAngles = Vector3.zero;
+            gunHolder.localRotation = Quaternion.identity;
+        }
     }
 
     // Update is called once per frame
@@ -154,7 +169,7 @@ public class PlayerController : MonoBehaviourPunCallbacks
             {
                 selectedGun = 0;
             }
-            SwitchGun();
+            photonView.RPC("SetGun", RpcTarget.All, selectedGun);
         }
         else if (Input.GetAxisRaw("Mouse ScrollWheel") < 0f)
         {
@@ -163,8 +178,11 @@ public class PlayerController : MonoBehaviourPunCallbacks
             {
                 selectedGun = allGuns.Length - 1;
             }
-            SwitchGun();
+            photonView.RPC("SetGun", RpcTarget.All, selectedGun);
         }
+
+        animator.SetBool("grounded", isGrounded);
+        animator.SetFloat("speed", moveDir.magnitude);
 
         //escape cursor
         if (Input.GetKey(KeyCode.Escape))
@@ -223,6 +241,15 @@ public class PlayerController : MonoBehaviourPunCallbacks
             a.gameObject.SetActive(false);
         }
         allGuns[selectedGun].gameObject.SetActive(true);
+    }
+    [PunRPC]
+    public void SetGun(int targetGun)
+    {
+        if (targetGun < allGuns.Length)
+        {
+            selectedGun = targetGun;
+            SwitchGun();
+        }
     }
 
     [PunRPC]

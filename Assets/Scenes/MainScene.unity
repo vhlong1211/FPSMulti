@@ -45681,7 +45681,12 @@ PrefabInstance:
     - target: {fileID: 1437977163883244535, guid: 3a85b27845531104a8abc56d09705149,
         type: 3}
       propertyPath: sceneViewId
-      value: 1
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3696423817083710475, guid: 3a85b27845531104a8abc56d09705149,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4737369903475762655, guid: 3a85b27845531104a8abc56d09705149,
         type: 3}
@@ -45732,6 +45737,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4793494737161362793, guid: 3a85b27845531104a8abc56d09705149,
+        type: 3}
+      propertyPath: sceneViewId
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
