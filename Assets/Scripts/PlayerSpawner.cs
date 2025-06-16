@@ -23,7 +23,7 @@ public class PlayerSpawner : SingletonMonoBehaviour<PlayerSpawner>
 
         player = PhotonNetwork.Instantiate(playerPrefab.name,spawnPoint.position,spawnPoint.rotation);
 
-        player.GetComponent<PlayerController>().Setup();
+        player.GetComponent<PhotonView>().RPC("Setup", RpcTarget.All);
     }
 
     public void Die(string damager)

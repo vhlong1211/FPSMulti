@@ -45,6 +45,8 @@ public class PlayerController : MonoBehaviourPunCallbacks
 
     public int maxHealth = 100;
     private int currentHealth;
+
+    [PunRPC]
     public void Setup()
     {
         isSetup = true;
@@ -56,15 +58,19 @@ public class PlayerController : MonoBehaviourPunCallbacks
 
         if (photonView.IsMine)
         {
+            Debug.Log("set up gun mine :" + photonView.Owner.NickName);
+
             model.SetActive(false);
             UIManager.ins.weaponTempSlide.maxValue = maxHeat;
             UIManager.ins.playerHealthSlide.maxValue = maxHealth;
         }
         else
         {
+            Debug.Log("set up gun :" + photonView.Owner.NickName);
             gunHolder.SetParent(gunAdjust);
-            gunHolder.localEulerAngles = Vector3.zero;
+            gunHolder.localPosition = Vector3.zero;
             gunHolder.localRotation = Quaternion.identity;
+            gunHolder.localScale = Vector3.one;
         }
     }
 
