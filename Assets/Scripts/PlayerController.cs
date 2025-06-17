@@ -58,15 +58,12 @@ public class PlayerController : MonoBehaviourPunCallbacks
 
         if (photonView.IsMine)
         {
-            Debug.Log("set up gun mine :" + photonView.Owner.NickName);
-
             model.SetActive(false);
             UIManager.ins.weaponTempSlide.maxValue = maxHeat;
             UIManager.ins.playerHealthSlide.maxValue = maxHealth;
         }
         else
         {
-            Debug.Log("set up gun :" + photonView.Owner.NickName);
             gunHolder.SetParent(gunAdjust);
             gunHolder.localPosition = Vector3.zero;
             gunHolder.localRotation = Quaternion.identity;
@@ -215,7 +212,7 @@ public class PlayerController : MonoBehaviourPunCallbacks
             {
                 PhotonNetwork.Instantiate(playerHitImpact.name, hit.point,Quaternion.identity);
 
-                hit.collider.gameObject.GetPhotonView().RPC("DealDamage", RpcTarget.All, photonView.Owner.NickName, allGuns[selectedGun].shotDamage);
+                hit.collider.gameObject.GetPhotonView().RPC("DealDamage", RpcTarget.All, photonView.Owner.NickName, allGuns[selectedGun].shotDamage, PhotonNetwork.LocalPlayer.ActorNumber);
             }
             else
             {
@@ -259,11 +256,11 @@ public class PlayerController : MonoBehaviourPunCallbacks
     }
 
     [PunRPC]
-    public void DealDamage(string damager,int damage)
+    public void DealDamage(string damager,int damage,int thuPham)
     {
-        TakeDamage(damager,damage);
+        TakeDamage(damager,damage, thuPham);
     }
-    public void TakeDamage(string damager, int damage)
+    public void TakeDamage(string damager, int damage, int thuPham)
     {
         if (photonView.IsMine)
         {
@@ -272,6 +269,7 @@ public class PlayerController : MonoBehaviourPunCallbacks
             {
                 currentHealth = 0;
                 PlayerSpawner.ins.Die(damager);
+                MatchManager.ins.UpdateStatSend(thuPham, 0, 1);
             }
             UIManager.ins.playerHealthSlide.value = currentHealth;
         }

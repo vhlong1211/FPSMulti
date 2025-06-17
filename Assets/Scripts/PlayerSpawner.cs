@@ -30,6 +30,7 @@ public class PlayerSpawner : SingletonMonoBehaviour<PlayerSpawner>
     {
         UIManager.ins.killedByTxt.text = "YOU WERE KILLED BY " + damager;
         StartCoroutine(ie_Die());
+        MatchManager.ins.UpdateStatSend(PhotonNetwork.LocalPlayer.ActorNumber,1,1);
     }
 
     public IEnumerator ie_Die()
