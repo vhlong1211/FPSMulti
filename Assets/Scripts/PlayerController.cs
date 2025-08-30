@@ -46,6 +46,14 @@ public class PlayerController : MonoBehaviourPunCallbacks
     public int maxHealth = 100;
     private int currentHealth;
 
+    public Material[] allSkins;
+
+    public float zoomSpeed;
+    public Transform zoomOutPoint, zoomInPoint;
+
+    public AudioSource footstepSlow;
+    public AudioSource footstepFast;
+
     [PunRPC]
     public void Setup()
     {
@@ -69,6 +77,8 @@ public class PlayerController : MonoBehaviourPunCallbacks
             gunHolder.localRotation = Quaternion.identity;
             gunHolder.localScale = Vector3.one;
         }
+
+        model.GetComponent<Renderer>().material = allSkins[photonView.Owner.ActorNumber % allSkins.Length];
     }
 
     // Update is called once per frame
@@ -114,10 +124,32 @@ public class PlayerController : MonoBehaviourPunCallbacks
         if (Input.GetKey(KeyCode.LeftShift))
         {
             activeMoveSpeed = runSpeed;
+
+            if (!footstepFast.isPlaying && moveDir != Vector3.zero)
+            {
+                footstepSlow.Stop();
+                footstepFast.Play();
+            }
         }
         else
         {
             activeMoveSpeed = moveSpeed;
+            if (!footstepSlow.isPlaying && moveDir != Vector3.zero)
+            {
+                footstepSlow.Play();
+                footstepFast.Stop();
+            }
+        }
+
+        if (moveDir == Vector3.zero || isGrounded == false)
+        {
+            //Debug.Log("1111");
+            footstepSlow.Stop();
+            footstepFast.Stop();
+        }
+        else 
+        {
+            //Debug.Log("2222");
         }
 
         movement.y += Physics.gravity.y * Time.deltaTime * gravityMod;
@@ -187,6 +219,18 @@ public class PlayerController : MonoBehaviourPunCallbacks
         animator.SetBool("grounded", isGrounded);
         animator.SetFloat("speed", moveDir.magnitude);
 
+        //Zoom
+        if (Input.GetMouseButton(1) && allGuns[selectedGun].zoomRange > 0)
+        {
+            cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, allGuns[selectedGun].zoomRange, zoomSpeed * Time.deltaTime);
+            gunHolder.position = Vector3.Lerp(gunHolder.position, zoomInPoint.position, zoomSpeed * Time.deltaTime);
+        }
+        else
+        {
+            cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, 60f, zoomSpeed * Time.deltaTime);
+            gunHolder.position = Vector3.Lerp(gunHolder.position, zoomOutPoint.position, zoomSpeed * Time.deltaTime);
+        }
+
         //escape cursor
         if (Input.GetKey(KeyCode.Escape))
         {
@@ -194,7 +238,7 @@ public class PlayerController : MonoBehaviourPunCallbacks
         }
         else if (Cursor.lockState == CursorLockMode.None)
         {
-            if (Input.GetMouseButtonDown(0))
+            if (Input.GetMouseButtonDown(0) && UIManager.ins.optionScreen.activeSelf != true)
             {
                 Cursor.lockState = CursorLockMode.Locked;
             }
@@ -234,6 +278,9 @@ public class PlayerController : MonoBehaviourPunCallbacks
 
         allGuns[selectedGun].muzzleFlash.SetActive(true);
         muzzleCounter = muzzleDisplayTime;
+
+        allGuns[selectedGun].shotSound.Stop();
+        allGuns[selectedGun].shotSound.Play();
     }
 
     private void SwitchGun()
@@ -281,8 +328,11 @@ public class PlayerController : MonoBehaviourPunCallbacks
 
         if (photonView.IsMine)
         {
-            cam.transform.position = viewPoint.position;
-            cam.transform.rotation = viewPoint.rotation;
+            if (MatchManager.ins.currentState == GameState.PLAYING)
+            {
+                cam.transform.position = viewPoint.position;
+                cam.transform.rotation = viewPoint.rotation;
+            }
         }
     }
 }

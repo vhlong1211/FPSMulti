@@ -36,7 +36,7 @@ public class Launcher : MonoBehaviourPunCallbacks
 
     public GameObject namePlayerScreen;
     public TMP_InputField playerNameInput;
-    private bool hasSetPlayerName;
+    public static bool hasSetPlayerName;
 
     public string levelToPlay;
     public GameObject startButton;
@@ -47,7 +47,11 @@ public class Launcher : MonoBehaviourPunCallbacks
         loadingScreen.SetActive(true);
         loadingText.text = "Connecting to network...";
 
-        PhotonNetwork.ConnectUsingSettings();
+        if(!PhotonNetwork.IsConnected)
+            PhotonNetwork.ConnectUsingSettings();
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 
     void CloseMenus()

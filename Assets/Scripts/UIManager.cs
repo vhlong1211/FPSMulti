@@ -4,6 +4,8 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using System.Linq;
+using UnityEditor.Experimental.GraphView;
+using Photon.Pun;
 
 public class UIManager : SingletonMonoBehaviour<UIManager>
 {
@@ -20,9 +22,13 @@ public class UIManager : SingletonMonoBehaviour<UIManager>
     public LeaderBoardItem leaderBoardItemPrefab;
     private List<LeaderBoardItem> listLeaderBoardItem = new List<LeaderBoardItem>();
 
+    public GameObject endScreen;
+    public TMP_Text timerTxt;
+
+    public GameObject optionScreen;
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Tab))
+        if (Input.GetKeyDown(KeyCode.Tab) && MatchManager.ins.currentState != GameState.ENDING)
         {
             if (leaderBoard.activeSelf)
             {
@@ -33,9 +39,19 @@ public class UIManager : SingletonMonoBehaviour<UIManager>
                 ShowLeaderBoard();
             }
         }
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            PauseUnpause();
+        }
+        if (optionScreen.activeSelf && Cursor.lockState != CursorLockMode.None) 
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+
     }
     public void ShowLeaderBoard()
-    { 
+    {
         leaderBoard.SetActive(true);
         foreach (var item in listLeaderBoardItem)
         {
@@ -52,4 +68,24 @@ public class UIManager : SingletonMonoBehaviour<UIManager>
             listLeaderBoardItem.Add(item);
         }
     }
+
+    public void PauseUnpause()
+    {
+        if (!optionScreen.activeSelf)
+        {
+            optionScreen.SetActive(true);
+        }
+        else
+        {
+            optionScreen.SetActive(false);
+        }
+
+    }
+
+    public void ReturnToMainMenu()
+    {
+        PhotonNetwork.AutomaticallySyncScene = false;
+        PhotonNetwork.LeaveRoom();
+    }
+
 }
